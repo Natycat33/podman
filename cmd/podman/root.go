@@ -26,6 +26,7 @@ import (
 	"go.podman.io/podman/v6/pkg/bindings"
 	"go.podman.io/podman/v6/pkg/checkpoint/crutils"
 	"go.podman.io/podman/v6/pkg/domain/entities"
+	"go.podman.io/podman/v6/pkg/machine/shim"
 	"go.podman.io/podman/v6/pkg/parallel"
 	"go.podman.io/podman/v6/version"
 	"go.podman.io/storage"
@@ -381,6 +382,9 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	if err := shim.EnsureHostForwarder(); err != nil {
+		return fmt.Errorf("ensuring api proxy is running: %w", err)
+	}
 	// Prep the engines
 	// Container engine MUST be first.
 	// We have special handling in there for passing flags to the runtime, that is ignored by the image engine.

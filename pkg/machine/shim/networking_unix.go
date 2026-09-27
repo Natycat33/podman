@@ -21,6 +21,10 @@ func cleanupStaleHostForwarder(_ *vmconfigs.MachineConfig, _ vmconfigs.VMProvide
 	return nil
 }
 
+func EnsureHostForwarder() error {
+	return nil
+}
+
 func setupMachineSockets(mc *vmconfigs.MachineConfig, dirs *define.MachineDirs) ([]string, string, machine.APIForwardingState, error) {
 	hostSocket, err := mc.APISocket()
 	if err != nil {
