@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"runtime"
@@ -266,6 +267,31 @@ var _ = Describe("run basic podman commands", func() {
 		// gxproxy should exit after machine is stopped
 		out, _ = pgrep(gvproxy)
 		Expect(out).ToNot(ContainSubstring(gvproxy))
+	})
+	
+    // https://github.com/podman-container-tools/podman/issues/28613
+	It("Podman recovers from missing gvproxy in hyperv mode", func() {
+		skipIfNotVmtype(define.HyperVVirt, "Hyper-V test only")
+
+		name := randomString()
+		i := new(initMachine)
+		session, err := mb.setName(name).setCmd(i.withImage(mb.imagePath).withNow()).run()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(session).To(Exit(0))
+
+		kill := exec.Command("taskkill.exe", "/F", "/IM", gvproxy)
+		Expect(kill.Run()).To(Succeed())
+		_, err = pgrep(gvproxy)
+		Expect(err).To(HaveOccurred())
+
+		bm := basicMachine{}
+		info, err := mb.setCmd(bm.withPodmanCommand([]string{"info"})).run()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(info).To(Exit(0))
+
+		out, err := pgrep(gvproxy)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(out).To(ContainSubstring(gvproxy))
 	})
 
 	It("podman volume on non-standard path", func() {
